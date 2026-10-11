@@ -1,0 +1,722 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <!-- Title on the Browser Tab -->
+    <title>A Stroll Around NEIU - Interactive Campus Map</title>
+
+    <!-- Loads the Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""/>
+
+    <!-- Loads the Leaflet JavaScript  -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+
+
+<style type="text/css">
+
+/* Sets the background and text colors for the webpage */
+html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    background-color: #FDB813; /* NEIU Gold */
+    color: #003DA7; /* NEIU Blue */
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Controls the appearance of the main heading */
+h1 {
+    margin: 0;
+    padding: 22px;
+    text-align: center;
+    font-family: Arial, sans-serif;
+    font-size: 32px;
+    color: #003DA7;
+}
+
+/* Controls the map's height, margins, and border */
+#map {
+    width: 90%;
+    max-width: 850px;
+    height: 520px;
+    margin: 0 auto 20px auto;
+    border: 4px solid #003DA7;
+}
+
+/* Styles the legend box on the map */
+.legend {
+    padding: 8px 10px;
+    font: 14px Arial, sans-serif;
+    background: white;
+    line-height: 20px;
+    color: #333;
+    border-radius: 4px;
+}
+
+/* Styles the small colored squares inside the legend */
+.legend i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 0.8;
+}
+
+/* Creates decorative white dividers */
+.divider {
+    border: none;
+    height: 3px;
+    background-color: white;
+    width: 75%;
+    margin: 20px auto;
+}
+
+/* Styles the About section with a white background */
+.map-description {
+    background-color: white;
+    color: #003DA7;
+    width: 90%;
+    max-width: 850px;
+    margin: 25px auto;
+    padding: 30px 40px;
+    border: 2px solid #003DA7;
+    border-radius: 12px;
+    box-sizing: border-box;
+}
+
+/* Styles the About section heading */
+.map-description h2 {
+    margin-top: 0;
+    color: #003DA7;
+    font-size: 24px;
+}
+
+/* Paragraph Styling */
+.map-description p {
+    font-size: 16px;
+    line-height: 1.7;
+    margin-bottom: 0;
+}
+
+/* Keepin' the campus popups neat and compact */
+.campus-popup {
+    width: 190px;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+/* Sizing the popup images */
+.campus-popup img {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 8px 0;
+    border-radius: 4px;
+}
+
+/* Reduces extra space between paragraphs */
+.campus-popup p {
+    margin: 6px 0;
+}
+
+/* Prevents horizontal scrolling in Leaflet popups */
+.leaflet-popup-content {
+    overflow-wrap: break-word;
+}
+
+
+/* Places the campus tour menu beside the map */
+.tour-layout {
+    display: flex;
+    gap: 20px;
+    width: 95%;
+    max-width: 1150px;
+    margin: 0 auto 20px auto;
+    align-items: stretch;
+}
+
+/* Styles the blue sidebar */
+.tour-sidebar {
+    width: 230px;
+    flex-shrink: 0;
+    background-color: #003DA7;
+    color: white;
+    padding: 18px;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+/* Sidebar heading */
+.tour-sidebar h2 {
+    font-size: 20px;
+    margin: 0 0 10px 0;
+}
+
+/* Sidebar instructions */
+.tour-sidebar p {
+    font-size: 13px;
+    line-height: 1.4;
+    margin-bottom: 15px;
+}
+
+/* Styles all the building buttons */
+.tour-sidebar button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 9px;
+    background-color: white;
+    color: #003DA7;
+    border: 2px solid white;
+    border-radius: 5px;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: left;
+}
+
+/* Makes buttons visibly respond to keyboard focus and mouse hover */
+.tour-sidebar button:hover,
+.tour-sidebar button:focus-visible {
+    background-color: #FDB813;
+    color: #003DA7;
+    border-color: #FDB813;
+    outline: 3px solid white;
+    outline-offset: 2px;
+}
+
+/* Styles the reset button differently */
+.tour-sidebar .reset-button {
+    background-color: #FDB813;
+    border-color: #FDB813;
+    text-align: center;
+    margin-top: 16px;
+}
+
+/* Allows the map to fill the remaining horizontal space */
+.tour-layout #map {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    height: 520px;
+    margin: 0;
+}
+
+/* Moves the sidebar above the map on smaller screens */
+@media (max-width: 750px) {
+    .tour-layout {
+        flex-direction: column;
+    }
+
+    .tour-sidebar {
+        width: 100%;
+    }
+
+    .tour-layout #map {
+        flex: none;
+        height: 450px;
+    }
+}
+
+/* Campus photo collage */
+.footer-image {
+    width: 95%;
+    max-width: 1150px;
+    margin: 25px auto;
+}
+
+.footer-image img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 3px solid #003DA7;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+/* Visually hidden text for screen readers */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Visually hidden text for screen readers */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Credits and AI statement beneath the photo footer */
+.project-credits {
+    width: 90%;
+    max-width: 850px;
+    margin: 25px auto 40px auto;
+    padding: 20px 25px;
+    box-sizing: border-box;
+    color: #003DA7;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+.project-credits h2 {
+    font-size: 18px;
+    margin: 20px 0 10px;
+}
+
+.project-credits p {
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 8px 0 18px;
+}
+
+.project-credits a {
+    color: #003DA7;
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+.project-credits a:focus-visible {
+    outline: 3px solid #003DA7;
+    outline-offset: 3px;
+}
+
+
+</style>
+
+</head>
+
+<body>
+
+    <!-- Heading displayed above map -->
+    <h1>A Stroll Around NEIU</h1>
+	
+	<!-- Decorative white divider -->
+	<hr class="divider">
+
+	<!-- Campus tour layout: sidebar and interactive map -->
+	
+	
+	<!-- Instructions for screen reader users -->
+<p class="sr-only" id="map-instructions">
+    Welcome to A Stroll Around NEIU, an interactive campus tour
+    featuring seven locations at Northeastern Illinois University.
+    Use the Let's Explore menu buttons to select a building.
+    Each button opens a map popup with a photograph and description.
+    You can navigate the buttons using the Tab key and activate
+    them using Enter or Space.
+</p>
+	
+	
+<div class="tour-layout">
+
+
+
+
+
+    <!-- Accessible building navigation -->
+    <nav class="tour-sidebar" aria-label="Campus tour stops">
+        <h2>Let's Explore!</h2>
+        <p>Select a building to learn more.</p>
+
+        <button type="button" id="btn-library">Ronald Williams Library</button>
+        <button type="button" id="btn-union">Student Union</button>
+        <button type="button" id="btn-brommel">Brommel Hall</button>
+        <button type="button" id="btn-walesa">Lech Walesa Hall</button>
+        <button type="button" id="btn-pe">Physical Education Complex</button>
+        <button type="button" id="btn-arts">Fine Arts Center</button>
+        <button type="button" id="btn-b">B Building</button>
+
+        <button type="button" id="btn-reset" class="reset-button">
+            Clear Pop-ups
+        </button>
+    </nav>
+
+    <!-- Leaflet map -->
+    <div id="map"
+     role="region"
+     aria-label="Interactive NEIU campus map"
+     aria-describedby="map-instructions">
+</div>
+
+</div> 
+
+
+
+
+	<!-- Second decorative divider -->
+	<hr class="divider">
+
+   <!-- Explains the purpose of the campus map -->
+<div class="map-description">
+
+    <h2>About This Map</h2>
+
+<p>Welcome to Northeastern Illinois University!</p>
+
+<p>
+    Whether you're a new student trying to find your way around campus
+    or just curious about what NEIU has to offer, come take a stroll
+    with me! I've highlighted several places around campus that I've
+    found helpful, from places to study and grab a coffee to spaces
+    for art, recreation, and connecting with other students.
+    This campus has so much to offer.
+</p>
+
+<p>
+    Use the <strong>Let's Explore!</strong> menu to choose a destination,
+    or click on one of the little Goldie markers to discover what's
+    inside each building. You can also switch between street and
+    satellite views using the map controls.
+</p>
+
+<p>
+    I hope this map helps you find your way around and discover a few
+    places you might not have known about!
+</p>
+
+</div>
+
+<!-- Campus photo collage -->
+<div class="footer-image">
+    <img src="Images/NEIU_footer.png"
+         alt="Three photographs of NEIU: students gathered around the campus, 
+		 an outdoor courtyard (the quad), and a campus sculpture.">
+</div>
+
+
+<!-- Project credits and AI usage statement -->
+<footer class="project-credits">
+
+    <h2>Credits & Acknowledgments</h2>
+
+    <p>
+        Campus photographs courtesy of
+        <a href="https://www.neiu.edu/" target="_blank" rel="noopener noreferrer">
+            Northeastern Illinois University</a>.
+        <br> Interactive mapping created using
+        <a href="https://leafletjs.com/" target="_blank" rel="noopener noreferrer">
+            Leaflet</a>, with street and satellite basemaps provided by Esri.
+    </p>
+
+    <p>
+        Campus tour design, building descriptions, and map development
+        by Ashley Grosh.
+    </p>
+
+    <h2>AI Usage Statement</h2>
+
+    <p>
+        ChatGPT assistance was used for troubleshooting
+        code errors, and improvementing accessibility. 
+    </p>
+
+</footer>
+
+
+
+<script type="text/javascript">
+
+// Creates the Leaflet map inside the HTML element called "map"
+// Creates the map centered on NEIU's main campus
+var map = L.map('map', {
+    center: [41.9805, -87.7185],
+    zoom: 17
+});
+
+
+// BASEMAPS
+
+// Creates the topographic basemap using Esri map tiles
+// addTo(map) makes this the basemap displayed when the page opens
+var topo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles © Esri',
+    maxZoom: 19
+}).addTo(map);
+
+// Creates a satellite imagery basemap
+// This one is available but does not display until selected
+var imagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+});
+
+
+// CUSTOM MARKER ICON
+
+// Sets up the Goldie marker, isn't it so cute!
+var goldieIcon = L.icon({
+    iconUrl: 'NEIU Marker.png',
+    iconSize: [30, 40],
+    iconAnchor: [15, 40],
+    popupAnchor: [0, -40]
+});
+
+// BUILDING MARKERS
+
+//  Marker at Ronald Williams Library
+var library = L.marker([41.980358, -87.719119], {
+    icon: goldieIcon,
+    alt: 'Ronald Williams Library map marker'
+}).addTo(map);
+
+
+// RONALD WILLIAMS LIBRARY POPUP
+library.bindPopup(
+    '<div class="campus-popup">' +
+    '<strong>Ronald Williams Library</strong>' +
+    '<img src="Images/Library.jpg" ' +
+    'alt="Exterior of Ronald Williams Library at NEIU">' +
+'<p>The library is a wonderful resource for students, ' +
+'with thousands of books, computer stations, private ' +
+'study rooms, the Academic Writing Center, and the ' +
+'Learning Success Center.</p>' +
+    '</div>'
+);
+
+ // STUDENT UNION
+ // Marker at the Student Union
+ var studentUnion = L.marker([41.981315, -87.718529], {
+     icon: goldieIcon,
+     alt: 'Student Union map marker'
+ }).addTo(map);
+
+// STUDENT UNION POPUP
+studentUnion.bindPopup(
+    '<div class="campus-popup">' +
+    '<strong>Student Union</strong><br><br>' +
+    '<img src="Images/StudentUnion.jpg" ' +
+    'alt="NEIU Student Union building" width="180"><br>' +
+    '<p>This is a center for student activities, events, ' +
+'and gathering with friends. Here you will find the ' +
+'school spirit shop, Café Descartes, Alumni Hall, ' +
+'the cafeteria, and cozy nooks to study in.</p>' +
+  
+	'<img src="Images/Coffee.jpg" ' +
+	'alt="Coffee counter at Café Descartes" ' +
+	'style="width:130px; max-width:100%; height:auto; margin:8px auto;">' +
+    '</div>',
+    {
+    maxWidth: 220,
+    maxHeight: 300,
+    autoPan: true,
+    autoPanPadding: [30, 30]
+} 
+);
+
+
+ // BERNARD J. BROMMEL HALL
+ // Marker at Brommel Hall
+ var brommelHall = L.marker([41.980381, -87.717016], {
+     icon: goldieIcon,
+     alt: 'Bernard J. Brommel Hall map marker'
+ }).addTo(map);
+
+// BERNARD J. BROMMEL HALL POPUP
+brommelHall.bindPopup(
+    '<div class="campus-popup">' +
+    '<strong>Bernard J. Brommel Hall</strong>' +
+    '<img src="Images/BBH.jpg" ' +
+    'alt="Exterior of Bernard J. Brommel Hall at NEIU">' +
+    '<p>This academic building primarily houses science ' +
+'and STEM programs, including Biology, Chemistry, ' +
+'Computer Science, Earth Science, Environmental Science, ' +
+'Mathematics, Physics, and Psychology, as well as the ' +
+'College of Arts and Sciences.</p>' +
+    '</div>'
+);
+
+
+ // LECH WALESA HALL
+ // Marker at Lech Walesa Hall
+ var walesaHall = L.marker([41.982391, -87.718518], {
+     icon: goldieIcon,
+     alt: 'Lech Walesa Hall map marker'
+ }).addTo(map);
+
+// LECH WALESA HALL POPUP
+walesaHall.bindPopup(
+    '<div class="campus-popup">' +
+    '<strong>Lech Walesa Hall</strong>' +
+    '<img src="Images/LechWalesaHall.jpg" ' +
+    'alt="Exterior of Lech Walesa Hall at NEIU">' +
+   '<p>This campus building contains many classrooms and ' +
+'several academic departments, including Education, ' +
+'English, History, World Cultures and Languages, and TESOL.</p>' +
+    '</div>'
+);
+
+
+ // PHYSICAL EDUCATION COMPLEX
+ // Marker at the PE Complex
+ var peComplex = L.marker([41.977981, -87.717301], {
+     icon: goldieIcon,
+     alt: 'Physical Education Complex map marker'
+ }).addTo(map);
+
+// PHYSICAL EDUCATION COMPLEX POPUP
+peComplex.bindPopup(
+    '<div class="campus-popup">' +
+    '<strong>Physical Education Complex</strong>' +
+    '<img src="Images/PEComplex.jpg" ' +
+    'alt="Exterior of the NEIU Physical Education Complex">' +
+    '<p>It is important for students to balance all the ' +
+'mental work they are doing with keeping their bodies ' +
+'healthy as well. Here, students can play sports, ' +
+'use the gym, or climb the rock wall.</p>' +
+    '</div>'
+);
+
+ // FINE ARTS CENTER
+ // Marker at the Fine Arts Center
+ var fineArts = L.marker([41.981012, -87.719087], {
+     icon: goldieIcon,
+     alt: 'Fine Arts Center map marker'
+ }).addTo(map);
+
+// FINE ARTS CENTER POPUP
+fineArts.bindPopup(
+    '<div class="campus-popup">' +
+    '<strong>Salme Harju Steinberg Fine Arts Center</strong>' +
+    '<img src="Images/FineArts.jpg" ' +
+    'alt="Exterior of the Salme Harju Steinberg Fine Arts Center">' +
+    '<p>The campus hub for visual and performing arts, ' +
+'where you can check out displays by local artists ' +
+'or catch a performance from music or dance majors.</p>' +
+
+    '</div>'
+);
+
+
+ // B BUILDING
+ // Marker at the B Building
+var bBuilding = L.marker([41.981083, -87.717531], {
+     icon: goldieIcon,
+     alt: 'B Building map marker'
+ }).addTo(map);
+
+// B BUILDING POPUP
+bBuilding.bindPopup(
+    '<div class="campus-popup">' +
+    '<strong>B Building</strong><br><br>' +
+    '<img src="Images/Building B.jpg" ' +
+    'alt="Exterior of NEIU B Building" width="180"><br>' +
+'<p>B Building is home to the Career Development Center, ' +
+'Student Counseling Services, and the Angelina Pedroso Center.</p>' +
+
+    '<img src="Images/PedrosoCenter.jpg" ' +
+    'alt="Interior seating area at the Angelina Pedroso Center" width="180">' +
+    '</div>',
+  {
+    maxWidth: 220,
+    maxHeight: 300,
+    autoPan: true,
+    autoPanPadding: [30, 30]
+}
+);
+
+// ALL CAMPUS MARKERS
+
+// Groups the seven building markers together
+var allMarkers = L.featureGroup([
+    library,
+    studentUnion,
+    brommelHall,
+    walesaHall,
+    peComplex,
+    fineArts,
+    bBuilding
+]);
+
+// Adjusts the map to display all seven buildings
+map.fitBounds(allMarkers.getBounds(), {
+    padding: [50, 50]
+});
+
+
+
+// LAYER CONTROLS
+
+// Lists the basemaps users can switch between
+// Only one basemap displays at a time
+var baseMaps = {
+    "Street Map": topo,
+    "Satellite Imagery": imagery
+};
+
+
+
+// Adds the layer selection menu to the map
+L.control.layers(baseMaps).addTo(map);
+
+
+// CAMPUS TOUR SIDEBAR
+
+// Opens the popup for the selected building
+function showStop(marker) {
+    marker.openPopup();
+}
+
+// Connects each sidebar button to its map marker
+document.getElementById('btn-library').addEventListener('click', function() {
+    showStop(library);
+});
+
+document.getElementById('btn-union').addEventListener('click', function() {
+    showStop(studentUnion);
+});
+
+document.getElementById('btn-brommel').addEventListener('click', function() {
+    showStop(brommelHall);
+});
+
+document.getElementById('btn-walesa').addEventListener('click', function() {
+    showStop(walesaHall);
+});
+
+document.getElementById('btn-pe').addEventListener('click', function() {
+    showStop(peComplex);
+});
+
+document.getElementById('btn-arts').addEventListener('click', function() {
+    showStop(fineArts);
+});
+
+document.getElementById('btn-b').addEventListener('click', function() {
+    showStop(bBuilding);
+});
+
+// Returns the map to the full campus view
+document.getElementById('btn-reset').addEventListener('click', function() {
+    map.closePopup();
+    map.fitBounds(allMarkers.getBounds(), {
+        padding: [50, 50]
+    });
+}); 
+
+
+
+</script>
+
+</body>
+</html>
